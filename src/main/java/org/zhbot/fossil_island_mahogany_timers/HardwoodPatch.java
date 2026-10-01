@@ -49,7 +49,7 @@ public class HardwoodPatch {
         {
             treeStumpSpawnTime = System.currentTimeMillis();
             if (lastImposterId == ObjectID.MAHOGANY_TREE_FULLYGROWN)
-                notifier.notify(config.notifications(), "Mahogany tree chopped.");
+                notifier.notify(config.notifyOnChop(), "Mahogany tree chopped.");
         }
 
         lastImposterId = imposterId;

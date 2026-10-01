@@ -10,14 +10,14 @@ public interface FossilIslandMahoganyTimersConfig extends Config
 	String group = "fossil-island-mahogany-timers";
 
 	@ConfigItem(
-			keyName = "notifications",
-			name = "Notifications",
+			keyName = "notifyOnChop",
+			name = "Notify on Chop",
 			description = "Send a client notification when tree chopped.",
 			position = 0
 	)
-	default Notification notifications()
+	default Notification notifyOnChop()
 	{
-		return Notification.OFF;
+		return Notification.ON;
 	}
 
 	@ConfigItem(
@@ -26,9 +26,9 @@ public interface FossilIslandMahoganyTimersConfig extends Config
 			description = "Send notification when inventory is full.",
 			position = 1
 	)
-	default boolean notifyOnFull()
+	default Notification notifyOnFull()
 	{
-		return true;
+		return Notification.ON;
 	}
 
 	@Alpha

@@ -134,7 +134,7 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 		if (!inFossilIslandHardwoodArea)
 			return;
 
-		if (!config.notifyOnFull())
+		if (!config.notifyOnFull().isEnabled())
 			return;
 
 		if (event.getType() != ChatMessageType.GAMEMESSAGE)
@@ -143,7 +143,7 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 		if (!event.getMessage().equals(INVENTORY_FULL_MESSAGE))
 			return;
 
-		notifier.notify(config.notifications(), "Inventory is full of mahogany logs.");
+		notifier.notify(config.notifyOnFull(), "Inventory is full of mahogany logs.");
 	}
 
 	@Provides
