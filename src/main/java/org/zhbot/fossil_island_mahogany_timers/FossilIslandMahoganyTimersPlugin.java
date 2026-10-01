@@ -5,13 +5,11 @@ import javax.inject.Inject;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.coords.WorldArea;
-import net.runelite.api.events.GameObjectDespawned;
-import net.runelite.api.events.GameObjectSpawned;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
+import net.runelite.api.events.*;
 import net.runelite.api.gameval.ObjectID;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
@@ -37,6 +35,7 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 			ObjectID.FARMING_HARDWOOD_TREE_PATCH_2,
 			ObjectID.FARMING_HARDWOOD_TREE_PATCH_3
 		);
+	private static final String INVENTORY_FULL_MESSAGE = "Your inventory is too full to hold any more mahogany logs.";
 
 	@Inject
 	private Client client;
@@ -127,6 +126,24 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 			return;
 
 		fossilIslandHardwoodPatches.removeIf(x -> x.getObject() == object);
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		if (!inFossilIslandHardwoodArea)
+			return;
+
+		if (!config.notifyOnFull())
+			return;
+
+		if (event.getType() != ChatMessageType.GAMEMESSAGE)
+			return;
+
+		if (!event.getMessage().equals(INVENTORY_FULL_MESSAGE))
+			return;
+
+		notifier.notify(config.notifications(), "Inventory is full of mahogany logs.");
 	}
 
 	@Provides

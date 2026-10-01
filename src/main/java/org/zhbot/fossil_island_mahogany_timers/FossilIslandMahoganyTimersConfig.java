@@ -20,12 +20,23 @@ public interface FossilIslandMahoganyTimersConfig extends Config
 		return Notification.OFF;
 	}
 
+	@ConfigItem(
+			keyName = "notifyOnFull",
+			name = "Notify on Full",
+			description = "Send notification when inventory is full.",
+			position = 1
+	)
+	default boolean notifyOnFull()
+	{
+		return true;
+	}
+
 	@Alpha
 	@ConfigItem(
 			keyName = "progressColour",
 			name = "Colour",
 			description = "The colour for the progress pie chart.",
-			position = 1
+			position = 2
 	)
 	default Color progressColour()
 	{
