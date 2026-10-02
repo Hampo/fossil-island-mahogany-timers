@@ -7,12 +7,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.events.*;
 import net.runelite.api.gameval.ObjectID;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -39,6 +41,9 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 
 	@Inject
 	private Client client;
+
+	@Inject
+	private EventBus eventBus;
 
 	@Inject
 	private OverlayManager overlayManager;
@@ -68,6 +73,8 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		overlayManager.remove(overlay);
+
+		clearPatches();
 	}
 
 	@Subscribe
@@ -76,7 +83,7 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 		if (gameStateChanged.getGameState() != GameState.LOADING)
 			return;
 
-		fossilIslandHardwoodPatches.clear();
+		clearPatches();
 	}
 
 	@Subscribe
@@ -97,9 +104,6 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 		}
 
 		inFossilIslandHardwoodArea = FOSSIL_ISLAND_HARDWOOD_AREA.contains2D(location);
-
-		for (final var patch : fossilIslandHardwoodPatches)
-			patch.onGameTick();
 	}
 
 	@Subscribe
@@ -112,7 +116,7 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 		if (!FOSSIL_ISLAND_HARDWOOD_PATCH_IDS.contains(object.getId()))
 			return;
 
-		fossilIslandHardwoodPatches.add(new HardwoodPatch(client, notifier, config, object));
+		addPatch(object);
 	}
 
 	@Subscribe
@@ -125,7 +129,7 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 		if (!FOSSIL_ISLAND_HARDWOOD_PATCH_IDS.contains(object.getId()))
 			return;
 
-		fossilIslandHardwoodPatches.removeIf(x -> x.getObject() == object);
+		removePatch(object);
 	}
 
 	@Subscribe
@@ -150,5 +154,33 @@ public class FossilIslandMahoganyTimersPlugin extends Plugin
 	FossilIslandMahoganyTimersConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(FossilIslandMahoganyTimersConfig.class);
+	}
+
+	private void addPatch(GameObject object)
+	{
+		final var patch = new HardwoodPatch(client, notifier, config, object);
+		eventBus.register(patch);
+		fossilIslandHardwoodPatches.add(patch);
+	}
+
+	private void removePatch(GameObject object)
+	{
+		fossilIslandHardwoodPatches.removeIf(x ->
+		{
+			if (x.getObject() == object)
+			{
+				eventBus.unregister(x);
+				return true;
+			}
+			return false;
+		});
+	}
+
+	private void clearPatches()
+	{
+		for (final var patch : fossilIslandHardwoodPatches)
+			eventBus.unregister(patch);
+
+		fossilIslandHardwoodPatches.clear();
 	}
 }

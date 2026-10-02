@@ -3,20 +3,23 @@ package org.zhbot.fossil_island_mahogany_timers;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
-import net.runelite.api.ObjectComposition;
-import net.runelite.api.gameval.ObjectID;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.Notifier;
+import net.runelite.client.eventbus.Subscribe;
 
 public class HardwoodPatch {
     private static final long RESPAWN_MILLIS = 40 * 600;
+    private static final int GROWN_STATE = 39;
+    private static final int STUMP_STATE = 40;
 
     private final Notifier notifier;
     private final FossilIslandMahoganyTimersConfig config;
+
     @Getter
     private final GameObject object;
+    private final int varbitID;
 
-    private final ObjectComposition objectComposition;
-    private int lastImposterId = -1;
+    private int lastState = -1;
     private long treeStumpSpawnTime = -1;
 
     public HardwoodPatch(final Client client, final Notifier notifier, final FossilIslandMahoganyTimersConfig config, final GameObject object)
@@ -25,34 +28,30 @@ public class HardwoodPatch {
         this.config = config;
         this.object = object;
 
-        this.objectComposition = client.getObjectDefinition(object.getId());
+        final var objectComposition = client.getObjectDefinition(object.getId());
+        varbitID = objectComposition.getVarbitId();
     }
 
-    public void onGameTick()
+    @Subscribe
+    public void onVarbitChanged(VarbitChanged event)
     {
-        final var imposter = objectComposition.getImpostor();
-        if (imposter == null)
-        {
-            lastImposterId = -1;
-            return;
-        }
-
-        final var imposterId = imposter.getId();
-        if (imposterId == lastImposterId)
+        if (event.getVarbitId() != varbitID)
             return;
 
-        if (imposterId != ObjectID.MAHOGANY_TREE_STUMP)
+        final var state = event.getValue();
+
+        if (state != STUMP_STATE)
         {
             treeStumpSpawnTime = -1;
         }
         else
         {
             treeStumpSpawnTime = System.currentTimeMillis();
-            if (lastImposterId == ObjectID.MAHOGANY_TREE_FULLYGROWN)
+            if (lastState == GROWN_STATE)
                 notifier.notify(config.notifyOnChop(), "Mahogany tree chopped.");
         }
 
-        lastImposterId = imposterId;
+        lastState = state;
     }
 
     public double getProgress()
